@@ -1,206 +1,120 @@
-# JApp Tracker (Azure MySQL + Render)
+# Job Tracker — Flask + Azure MySQL
 
-A simple web application built with Flask to track job applications.
-It supports full CRUD operations and sends automated email reminders for follow-ups.
-
----
-
-## Features
-
-* Add, edit, delete job applications
-* Search and filter applications by status
-* Secure login system (session-based)
-* Day by day email reminders (Day 3, 5, 7 follow-ups)
-* Manual trigger for reminder emails
-* Azure MySQL database integration
-
-Core functionality is implemented in:
-
-* `app.py` (routes + auth) 
-* `db.py` (database connection) 
-* `reminders.py` (email scheduler) 
+A minimal web app for managing the `JobsData` table in your `job-tracker`
+Azure MySQL database. Supports Create, Read, Update, Delete, and sends
+daily email reminders for Day 3 / 5 / 7 follow-ups on applications still
+pending a response.
 
 ---
 
-## Tech Stack
+## 1. Prerequisites
 
-* Python 3
-* Flask
-* MySQL (Azure MySQL Flexible Server)
-* Gunicorn (production server)
-* APScheduler (background jobs)
-* Render (deployment)
-
-Dependencies are defined in `requirements.txt` 
+- **Python 3.10+** installed
+- **Azure MySQL firewall:** add your current client IP
+  (Azure Portal → your MySQL server → *Networking*)
+- **Azure SSL certificate** (required by Azure MySQL).
+  Download `DigiCertGlobalRootCA.crt.pem` and place it in the project folder:
+  <https://www.digicert.com/kb/digicert-root-certificates.htm>
 
 ---
 
-## 📁 Project Structure
-
-```
-.
-├── app.py              # Main Flask app (routes, login, CRUD)
-├── db.py               # Database helper
-├── reminders.py        # Email reminders + scheduler
-├── wsgi.py             # Entry point for Gunicorn
-├── requirements.txt
-├── Procfile
-├── render.yaml
-├── .env.example
-├── templates/
-└── static/
-```
-
----
-
-## Environment Variables
-
-Create a `.env` file based on `.env.example` and fill in:
-
-### App Config
-
-```
-FLASK_SECRET_KEY=your_secret_key
-APP_PASSWORD=your_login_password
-```
-
-### Database (Azure MySQL)
-
-```
-DB_HOST=your_host
-DB_PORT=3306
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_NAME=your_database
-DB_SSL_CA=path_to_cert.pem
-```
-
-### 📧 Email (SMTP)
-
-```
-EMAIL_FROM=your_email
-EMAIL_TO=your_email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email
-SMTP_PASSWORD=your_app_password
-```
-
-### Reminder Scheduler
-
-```
-REMINDER_HOUR=9
-REMINDER_MINUTE=0
-```
-
----
-
-## Run Locally
+## 2. Setup
 
 ```bash
+cd "D:/Claude Work - Projects/Job-Tracker-App"
+
+# Create a virtual environment
 python -m venv venv
-venv\Scripts\activate        # Windows
+venv\Scripts\activate            # Windows
+# source venv/bin/activate       # Linux / macOS
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Copy and edit environment variables
+copy .env.example .env           # Windows
+# cp .env.example .env           # Linux / macOS
+```
+
+Open `.env` and fill in:
+
+- `DB_PASSWORD` — your Azure MySQL password
+- SMTP section — Gmail app password works best
+  (create one at <https://myaccount.google.com/apppasswords>)
+
+---
+
+## 3. Run
+
+```bash
 python app.py
 ```
 
-App runs at:
+Open <http://localhost:5000> in your browser.
+
+To access from your phone on the same Wi-Fi network:
+`http://<your-pc-ip>:5000` (find IP with `ipconfig`).
+
+---
+
+## 4. Features
+
+| Feature | How to use |
+|---|---|
+| **View / search** | Home page. Filter by text and status. |
+| **Add** | Click "+ New Application" |
+| **Edit** | Click "Edit" on any row |
+| **Delete** | Click "Delete" (asks for confirmation) |
+| **Email reminders** | Sent automatically every day at 09:00 (change `REMINDER_HOUR` in `.env`) |
+| **Test email now** | Click "Send Reminder Email Now" button in the header |
+
+Reminder logic: includes applications where
+`date_applied` was exactly 3, 5, or 7 days ago AND
+`post_status` is still one of `Applied`, `Application Viewed`, or
+`Pending Response`.
+
+---
+
+## 5. Project Structure
 
 ```
-http://localhost:5000
+Job-Tracker-App/
+├── app.py                 # Flask routes (CRUD)
+├── db.py                  # MySQL connection helper
+├── reminders.py           # Email scheduler + digest builder
+├── requirements.txt
+├── .env.example           # Copy to .env and fill in
+├── DigiCertGlobalRootCA.crt.pem   # You download this
+├── templates/
+│   ├── base.html
+│   ├── index.html         # Applications table
+│   └── form.html          # New / Edit form
+└── static/
+    └── style.css
 ```
 
 ---
 
+## 6. Later — Deploying to your Debian server
+
+When you're ready, the process is roughly:
+
+1. Copy the folder to the server
+2. Install Python + create the venv there
+3. Run under `gunicorn` behind `nginx` as a systemd service
+4. Add the server's public IP to the Azure MySQL firewall
+5. (Optional) Add auth since it will be reachable from the internet
+
+Happy to write the deployment files when you reach that step.
 
 ---
 
-### 2. Create Render Web Service
+## 7. Troubleshooting
 
-* Connect GitHub repo
-* Environment: **Python**
-
-**Build Command**
-
-```
-pip install -r requirements.txt
-```
-
-**Start Command**
-
-```
-gunicorn wsgi:app
-```
-
-(`wsgi.py` is used as entry point) 
-
----
-
-### 3. Add Environment Variables in Render
-
-Replicate all values from your `.env` into the Render dashboard.
-
----
-
-### 4. Azure Firewall
-
-Approve outer access:
-
-* Go to Azure Portal → MySQL Server → Networking
-* Add rule:
-
-```
-0.0.0.0 → 255.255.255.255
-```
-
----
-
-## Reminder System
-
-The app sends daily email reminders for follow-ups.
-
-Logic (from code):
-
-* Finds applications where:
-
-  * `date_applied` = 3, 5, or 7 days ago
-  * status is still open (`Applied`, `Pending Response`, etc.) 
-
-* Sends a single digest email
-
-You can also trigger manually:
-
-```
-POST /send-reminders
-```
-
----
-
-## 🔐 Authentication
-
-* Simple password-based login
-* Controlled via `APP_PASSWORD`
-* Uses Flask sessions with 30-day duration 
-
----
-
-## ⚠️ Common Issues
-
-| Issue                 | Cause            | Fix                        |
-| --------------------- | ---------------- | -------------------------- |
-| DB connection fails   | Firewall         | Allow IP in Azure          |
-| SSL error             | Missing cert     | Add `DigiCertGlobalRootCA` |
-| Emails not sending    | Wrong SMTP       | Use Gmail App Password     |
-| App crashes on Render | Missing gunicorn | Already included           |
-
----
-
-## 📌 Notes
-
-* Debug mode is enabled locally only
-* Scheduler starts automatically on app startup 
-
-
-## 📄 License
-
-This project is for personal use and learning and licensed under MIT.
+| Problem | Fix |
+|---|---|
+| `Access denied for user` | Wrong username/password in `.env` |
+| `Can't connect to MySQL server` | Your IP isn't whitelisted in Azure Networking |
+| `SSL connection error` | `DigiCertGlobalRootCA.crt.pem` missing or path wrong |
+| Email doesn't send | Use a **Gmail App Password**, not your Gmail password |
+| Table columns don't match | Run `Job-Tracker.sql` first so `JobsData` exists |
