@@ -5,12 +5,12 @@ It supports full CRUD operations and sends automated email reminders for follow-
 
 ---
 
-## 🚀 Features
+## Features
 
 * Add, edit, delete job applications
 * Search and filter applications by status
 * Secure login system (session-based)
-* Daily email reminders (Day 3, 5, 7 follow-ups)
+* Day by day email reminders (Day 3, 5, 7 follow-ups)
 * Manual trigger for reminder emails
 * Azure MySQL database integration
 
@@ -22,7 +22,7 @@ Core functionality is implemented in:
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 * Python 3
 * Flask
@@ -53,18 +53,18 @@ Dependencies are defined in `requirements.txt`
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 Create a `.env` file based on `.env.example` and fill in:
 
-### 🔐 App Config
+### App Config
 
 ```
 FLASK_SECRET_KEY=your_secret_key
 APP_PASSWORD=your_login_password
 ```
 
-### 🗄️ Database (Azure MySQL)
+### Database (Azure MySQL)
 
 ```
 DB_HOST=your_host
@@ -86,7 +86,7 @@ SMTP_USER=your_email
 SMTP_PASSWORD=your_app_password
 ```
 
-### ⏰ Reminder Scheduler
+### Reminder Scheduler
 
 ```
 REMINDER_HOUR=9
@@ -95,7 +95,7 @@ REMINDER_MINUTE=0
 
 ---
 
-## ▶️ Run Locally
+## Run Locally
 
 ```bash
 python -m venv venv
@@ -112,17 +112,6 @@ http://localhost:5000
 
 ---
 
-## 🌐 Deployment (Render)
-
-### 1. Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "initial commit"
-git remote add origin <your-repo-url>
-git push -u origin main
-```
 
 ---
 
@@ -149,13 +138,13 @@ gunicorn wsgi:app
 
 ### 3. Add Environment Variables in Render
 
-Copy all values from your `.env` into Render dashboard.
+Replicate all values from your `.env` into the Render dashboard.
 
 ---
 
 ### 4. Azure Firewall
 
-Allow external access:
+Approve outer access:
 
 * Go to Azure Portal → MySQL Server → Networking
 * Add rule:
@@ -166,7 +155,7 @@ Allow external access:
 
 ---
 
-## 🔔 Reminder System
+## Reminder System
 
 The app sends daily email reminders for follow-ups.
 
@@ -210,19 +199,8 @@ POST /send-reminders
 
 * Debug mode is enabled locally only
 * Scheduler starts automatically on app startup 
-* Database queries use parameterized SQL (safe from injection) 
 
----
-
-## ✅ Next Steps
-
-* Add user accounts instead of single password
-* Improve UI
-* Restrict Azure firewall for security
-* Add logging & monitoring
-
----
 
 ## 📄 License
 
-This project is for personal use and learning.
+This project is for personal use and learning and licensed under MIT.
